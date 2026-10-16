@@ -36,10 +36,6 @@ function PainelFixados({ fixados, aoAbrir }: PropriedadesPainelFixados) {
                 <span className="text-[12.5px] font-semibold text-slate-900 liquido:text-sm">{aviso.autorNome}</span>
                 <span className="text-[11px] text-slate-500 liquido:text-xs">{aviso.setorNome}</span>
               </div>
-              <span className="ml-auto flex items-center gap-1 text-[10px] font-medium text-brand-600 uppercase liquido:text-xs liquido:font-semibold liquido:normal-case">
-                <IconePin tamanho={13} />
-                Fixado
-              </span>
             </div>
             {/* Evento pode não ter conteúdo; aí o título ocupa o lugar. */}
             <p className="m-0 line-clamp-2 text-[13px] leading-relaxed text-slate-700 liquido:text-sm">
