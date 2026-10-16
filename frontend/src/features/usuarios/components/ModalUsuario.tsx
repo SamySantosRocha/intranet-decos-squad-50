@@ -61,22 +61,21 @@ export default function ModalUsuario({ usuarioEditando, setores, aoFechar }: Pro
   function fechar() { if (!salvar.isPending) aoFechar() }
 
   return (
-    <Modal aberto titulo={usuarioEditando ? 'Editar usuário' : 'Novo usuário'} aoFechar={fechar} largura="600px">
+    <Modal aberto titulo={usuarioEditando ? 'Editar usuário' : 'Novo usuário'} aoFechar={fechar} largura="520px">
+      {!usuarioEditando && <p className="mb-5 text-sm leading-relaxed text-slate-600">Cadastre o colaborador e informe uma senha inicial para o primeiro acesso.</p>}
       <form onSubmit={handleSubmit(enviar)}>
-        <fieldset disabled={salvar.isPending} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Campo rotulo="Nome completo" erro={errors.nome?.message} className="sm:col-span-2">
-            <Input autoComplete="name" maxLength={200} {...register('nome', { required: 'Informe o nome.', validate: valor => !!valor.trim() || 'Informe o nome.', maxLength: 200 })} />
+        <fieldset disabled={salvar.isPending} className="grid grid-cols-1 gap-4">
+          <Campo rotulo="Nome completo" erro={errors.nome?.message}>
+            <Input placeholder="Ex.: Ana Lúcia Freitas" autoComplete="name" maxLength={200} {...register('nome', { required: 'Informe o nome.', validate: valor => !!valor.trim() || 'Informe o nome.', maxLength: 200 })} />
           </Campo>
-          <Campo rotulo="E-mail" erro={errors.email?.message} className="sm:col-span-2">
-            <Input type="email" autoComplete="email" maxLength={200} {...register('email', { required: 'Informe o e-mail.', maxLength: 200 })} />
+          <Campo rotulo="E-mail" erro={errors.email?.message}>
+            <Input type="email" placeholder="nome.sobrenome@decos.com.br" autoComplete="email" maxLength={200} {...register('email', { required: 'Informe o e-mail.', maxLength: 200 })} />
           </Campo>
-          {!usuarioEditando && <Campo rotulo="Senha inicial" erro={errors.senha?.message} className="sm:col-span-2">
+          {!usuarioEditando && <Campo rotulo="Senha inicial" erro={errors.senha?.message}>
             <Input type="password" autoComplete="new-password" maxLength={128} {...register('senha', { required: 'Informe a senha inicial.', minLength: { value: 8, message: 'Use pelo menos 8 caracteres.' }, maxLength: 128 })} />
           </Campo>}
-          <Campo rotulo="Perfil de acesso" erro={errors.role?.message}>
-            <Select {...register('role')}>
-              {Object.entries(ROTULOS_PAPEL).map(([valor, rotulo]) => <option key={valor} value={valor} >{rotulo}</option>)}
-            </Select>
+          <Campo rotulo="Data de nascimento" erro={errors.dataNascimento?.message}>
+            <Input type="date" {...register('dataNascimento')} />
           </Campo>
           <Campo rotulo="Setor" erro={errors.setorId?.message}>
             <Select {...register('setorId')}>
@@ -84,14 +83,16 @@ export default function ModalUsuario({ usuarioEditando, setores, aoFechar }: Pro
               {setores.map(setor => <option key={setor.id} value={setor.id}>{setor.nome}</option>)}
             </Select>
           </Campo>
-          <Campo rotulo="Data de nascimento" erro={errors.dataNascimento?.message}>
-            <Input type="date" {...register('dataNascimento')} />
+          <Campo rotulo="Perfil de acesso" erro={errors.role?.message}>
+            <Select {...register('role')}>
+              {Object.entries(ROTULOS_PAPEL).map(([valor, rotulo]) => <option key={valor} value={valor} >{rotulo}</option>)}
+            </Select>
           </Campo>
           {usuarioEditando && <label className="flex items-center gap-2 text-sm text-slate-600">
             <input type="checkbox" {...register('ativo')} disabled={salvar.isPending} /> Usuário ativo
           </label>}
-          {salvar.isError && <p role="alert" className="text-sm text-critical sm:col-span-2">{mensagemErroUsuario(salvar.error)}</p>}
-          <div className="flex justify-end gap-2 border-t border-brand-100/60 pt-4 sm:col-span-2">
+          {salvar.isError && <p role="alert" className="text-sm text-critical">{mensagemErroUsuario(salvar.error)}</p>}
+          <div className="flex justify-end gap-2 border-t border-brand-100/60 pt-4">
             <Botao onClick={fechar}>Cancelar</Botao>
             <Botao type="submit" variante="primario">{salvar.isPending ? 'Salvando…' : usuarioEditando ? 'Salvar alterações' : 'Criar usuário'}</Botao>
           </div>

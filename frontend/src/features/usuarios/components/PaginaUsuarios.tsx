@@ -1,13 +1,11 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Navigate } from 'react-router-dom'
-import { IconeMais } from '../../../shared/components/icones'
+import { IconeMais, IconeLupa, IconeFunil, IconePredio } from '../../../shared/components/icones'
 import { useAuth } from '../../../lib/auth/useAuth'
 import Botao from '../../../shared/components/Botao'
-import Campo from '../../../shared/components/Campo'
-import Input from '../../../shared/components/Input'
+import Dropdown from '../../../shared/components/Dropdown'
 import Modal from '../../../shared/components/Modal'
-import Select from '../../../shared/components/Select'
 import { listarSetores } from '../../setores/api'
 import { mensagemErroUsuario, useExcluirUsuario, useUsuarios } from '../hooks/useUsuarios'
 import { ROTULOS_PAPEL, type UsuarioCadastro } from '../types'
@@ -33,9 +31,10 @@ export default function PaginaUsuarios() {
   if (!usuario) return <Navigate to="/login" replace />
   if (!permitido) return <Navigate to="/nao-autorizado" replace />
 
+  const mapaSetores = new Map(setores.data?.map(setor => [setor.id, setor.nome]))
   const termo = busca.trim().toLocaleLowerCase('pt-BR')
   const filtrados = (consulta.data ?? []).filter(item =>
-    `${item.nome} ${item.email}`.toLocaleLowerCase('pt-BR').includes(termo)
+    `${item.nome} ${item.email} ${item.setorId ? mapaSetores.get(item.setorId) ?? '' : ''}`.toLocaleLowerCase('pt-BR').includes(termo)
     && (!papel || item.role === papel)
     && (!setorId || item.setorId === setorId)
     && (!status || item.ativo === (status === 'ativo')),
@@ -43,21 +42,21 @@ export default function PaginaUsuarios() {
   const totalPaginas = Math.max(1, Math.ceil(filtrados.length / TAMANHO_PAGINA))
   const paginaAtual = Math.min(pagina, totalPaginas)
   const inicio = (paginaAtual - 1) * TAMANHO_PAGINA
-  const mapaSetores = new Map(setores.data?.map(setor => [setor.id, setor.nome]))
 
   function fecharExclusao() { if (!excluir.isPending) setExclusao(null) }
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div><h1 className="text-2xl font-semibold tracking-tight text-slate-900 liquido:font-display liquido:text-3xl liquido:font-bold">Usuários</h1><p className="text-sm text-slate-500">Gerencie colaboradores, setores e perfis de acesso.</p></div>
-        <Botao variante="primario" disabled={!setores.isSuccess} onClick={() => setEdicao('novo')} className="flex items-center gap-2"><IconeMais tamanho={18} />Novo usuário</Botao>
-      </div>
-      <div className="surface grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Campo rotulo="Buscar por nome ou e-mail"><Input type="search" value={busca} onChange={evento => { setBusca(evento.target.value); setPagina(1) }} placeholder="Buscar usuário" /></Campo>
-        <Campo rotulo="Perfil"><Select value={papel} onChange={evento => { setPapel(evento.target.value); setPagina(1) }}><option value="">Todos os perfis</option>{Object.entries(ROTULOS_PAPEL).map(([valor, rotulo]) => <option key={valor} value={valor}>{rotulo}</option>)}</Select></Campo>
-        <Campo rotulo="Setor"><Select value={setorId} onChange={evento => { setSetorId(evento.target.value); setPagina(1) }}><option value="">Todos os setores</option>{setores.data?.map(setor => <option key={setor.id} value={setor.id}>{setor.nome}</option>)}</Select></Campo>
-        <Campo rotulo="Status"><Select value={status} onChange={evento => { setStatus(evento.target.value); setPagina(1) }}><option value="">Todos</option><option value="ativo">Ativos</option><option value="inativo">Inativos</option></Select></Campo>
+      <h1 className="mb-6 text-2xl font-semibold tracking-tight text-slate-900 liquido:font-display liquido:text-3xl liquido:font-bold">Usuários</h1>
+      <div className="flex flex-wrap items-stretch gap-3 sm:gap-3.5">
+        <label className="relative block w-full sm:w-auto sm:flex-[0_1_430px]">
+          <IconeLupa tamanho={16} className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-slate-500 liquido:left-4" />
+          <input type="search" aria-label="Buscar por nome, e-mail ou setor" placeholder="Buscar por nome, e-mail ou setor" value={busca} onChange={evento => { setBusca(evento.target.value); setPagina(1) }} className="field h-full py-2.5 pl-[38px] text-[13.5px] liquido:capsule-field liquido:pl-10 liquido:text-sm" />
+        </label>
+        <Dropdown rotuloPadrao="Perfil" icone={<IconeFunil tamanho={15} />} valor={papel} aoMudar={valor => { setPapel(valor); setPagina(1) }} opcoes={[{ valor: '', rotulo: 'Todos os perfis' }, ...Object.entries(ROTULOS_PAPEL).map(([valor, rotulo]) => ({ valor, rotulo }))]} />
+        <Dropdown rotuloPadrao="Setor" icone={<IconePredio tamanho={15} />} valor={setorId} aoMudar={valor => { setSetorId(valor); setPagina(1) }} opcoes={[{ valor: '', rotulo: 'Todos os setores' }, ...(setores.data ?? []).map(setor => ({ valor: setor.id, rotulo: setor.nome }))]} />
+        <Dropdown rotuloPadrao="Status" valor={status} aoMudar={valor => { setStatus(valor); setPagina(1) }} opcoes={[{ valor: '', rotulo: 'Todos' }, { valor: 'ativo', rotulo: 'Ativos' }, { valor: 'inativo', rotulo: 'Inativos' }]} />
+        <Botao variante="primario" disabled={!setores.isSuccess} onClick={() => setEdicao('novo')} className="sm:ml-auto"><IconeMais tamanho={18} />Novo usuário</Botao>
       </div>
       {setores.isError && <div role="alert" className="text-sm text-critical">Não foi possível carregar os setores. <button type="button" onClick={() => void setores.refetch()} className="underline">Tentar novamente</button></div>}
       {consulta.isPending && <p role="status" className="text-sm text-slate-500">Carregando usuários…</p>}

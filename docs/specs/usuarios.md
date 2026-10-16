@@ -20,7 +20,7 @@ Origem: [ENT H6] · Back ✅ · Front ✅ · Teste ✅
 `setor_id`, `data_nascimento`, `ativo`, `criado_em`; nunca a senha nem o hash. Inclui usuários
 desativados.
 
-- Frontend ✅: tabela `/usuarios`, busca por nome/e-mail, filtros de perfil/setor/status e paginação local de 10 registros.
+- Frontend ✅: tabela `/usuarios`, busca por nome/e-mail/setor, filtros de perfil/setor/status e paginação local de 10 registros.
 
 ### USU-02 — Cadastrar usuário
 Origem: [ESP] [ENT H6] · Back ✅ · Front ✅ · Teste ✅
@@ -86,3 +86,10 @@ Origem: — · Back ❓ · Front ❓ · Teste ⬜
 
 Não há fluxo de troca de senha pelo próprio usuário nem redefinição pelo superadmin. A decidir se
 entra no MVP.
+
+### Referência visual da página
+
+Protótipo fornecido em `Intranet do hospital.zip`, arquivo `Intranet Decós.dc.html`, seção `isUsuarios`. A estrutura segue título, barra de busca/filtros com ação Novo usuário e tabela Colaborador · Setor · Perfil · Ações; status fica junto ao colaborador. Usar os estilos atuais de Vidro clínico/Vidro líquido, com avatar decorativo e perfil em etiqueta. Manter filtros de status e paginação existentes.
+
+- USU-01: a busca encontra também o nome do setor; filtros de perfil e setor funcionam pela barra de dropdowns.
+- O protótipo usa Leitor/Editor/Administrador e convite por e-mail. Os papéis e o cadastro com senha inicial continuam conforme o contrato atual; convite depende da decisão de USU-07.

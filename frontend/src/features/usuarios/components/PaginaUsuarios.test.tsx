@@ -4,6 +4,7 @@ import { cleanup, render, screen, waitFor, within } from '@testing-library/react
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import type { SetorComRamais } from '../../setores/types'
 import type { Papel } from '../../../lib/auth/tipos'
 import * as usuariosApi from '../api'
 import * as setoresApi from '../../setores/api'
@@ -16,9 +17,9 @@ vi.mock('../../setores/api')
 const estado = vi.hoisted(() => ({ usuario: { id: 'admin', role: 'superadmin' as Papel, setorId: null } }))
 const pessoa: UsuarioCadastro = { id:'pessoa',nome:'Maria',email:'maria@example.com',role:'comum',setorId:null,dataNascimento:null,ativo:true,criadoEm:'2026-10-16T10:00:00Z' }
 
-function montar(lista: UsuarioCadastro[] = [pessoa]) {
+function montar(lista: UsuarioCadastro[] = [pessoa], setores: SetorComRamais[] = []) {
   vi.mocked(usuariosApi.listarUsuarios).mockResolvedValue(lista)
-  vi.mocked(setoresApi.listarSetores).mockResolvedValue([])
+  vi.mocked(setoresApi.listarSetores).mockResolvedValue(setores)
   const cliente = new QueryClient({defaultOptions:{queries:{retry:false}, mutations:{retry:false}}})
   render(<QueryClientProvider client={cliente}><MemoryRouter initialEntries={['/usuarios']}><Routes><Route path="/usuarios" element={<PaginaUsuarios />} /><Route path="/nao-autorizado" element={<p>Bloqueado</p>} /></Routes></MemoryRouter></QueryClientProvider>)
   return userEvent.setup()
@@ -34,9 +35,9 @@ describe('USU-01 a USU-04 — gestão exclusiva de superadmin', () => {
   })
   it('USU-01: lista e filtra por nome sem apagar dados', async () => {
     const interagir=montar(); await screen.findByText('Maria')
-    await interagir.type(screen.getByLabelText(/^BUSCAR POR NOME OU E-MAIL$/i), 'inexistente')
+    await interagir.type(screen.getByLabelText(/^BUSCAR POR NOME, E-MAIL OU SETOR$/i), 'inexistente')
     expect(screen.getByText('Nenhum usuário encontrado com esses filtros.')).toBeTruthy()
-    await interagir.clear(screen.getByLabelText(/^BUSCAR POR NOME OU E-MAIL$/i))
+    await interagir.clear(screen.getByLabelText(/^BUSCAR POR NOME, E-MAIL OU SETOR$/i))
     expect(screen.getByText('Maria')).toBeTruthy()
   })
   it('USU-02: cadastra e envia campos tipados ao contrato HTTP', async () => {
@@ -81,7 +82,7 @@ describe('USU-01/USU-02 — paginação e falhas de validação', () => {
     expect(screen.queryByText('Pessoa 10')).toBeNull()
     await interagir.click(screen.getByRole('button',{name:'Próxima'}))
     expect(screen.getByText('Pessoa 10')).toBeTruthy()
-    await interagir.type(screen.getByLabelText(/^BUSCAR POR NOME OU E-MAIL$/i),'Pessoa 0')
+    await interagir.type(screen.getByLabelText(/^BUSCAR POR NOME, E-MAIL OU SETOR$/i),'Pessoa 0')
     expect(screen.getByText('Pessoa 0')).toBeTruthy()
     expect(screen.queryByText('Pessoa 10')).toBeNull()
   })
@@ -98,5 +99,19 @@ describe('USU-01/USU-02 — paginação e falhas de validação', () => {
     await waitFor(() => expect(screen.getAllByText('E-mail duplicado').length).toBe(2))
     expect(screen.getByRole('dialog')).toBeTruthy()
     expect((within(screen.getByRole('dialog')).getByRole('textbox', {name:/E-MAIL/i}) as HTMLInputElement).value).toBe('maria@example.com')
+  })
+})
+
+
+describe('USU-01 — estrutura do protótipo e filtros', () => {
+  it('mostra as quatro colunas do protótipo e busca pelo setor', async () => {
+    const interagir = montar([{ ...pessoa, setorId: 'setor' }], [{ id: 'setor', nome: 'Enfermagem', criadoEm: '2026-10-16T10:00:00Z', ramais: [] }])
+    await screen.findByText('Enfermagem')
+    expect(screen.getAllByRole('columnheader').map(item => item.textContent)).toEqual(['Colaborador', 'Setor', 'Perfil', 'Ações'])
+    await interagir.type(screen.getByRole('searchbox'), 'enfermagem')
+    expect(screen.getByText('Maria')).toBeTruthy()
+    await interagir.click(screen.getByRole('button', { name: 'Perfil' }))
+    await interagir.click(screen.getByRole('button', { name: 'Superadmin' }))
+    expect(screen.getByText('Nenhum usuário encontrado com esses filtros.')).toBeTruthy()
   })
 })
